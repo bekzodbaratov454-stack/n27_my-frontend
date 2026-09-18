@@ -55,7 +55,7 @@ export default function PopularCourses() {
     setLikedCourses((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://63.180.181.4:8080";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
   const filteredCourses =
     activeCategory === "all"

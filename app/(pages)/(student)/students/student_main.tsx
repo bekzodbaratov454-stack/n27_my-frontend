@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Topbar from "./components/Topbar";
 import Sidebar from "./components/Sidebar";
 import CourseCard from "./components/CourseCard";
@@ -12,14 +13,24 @@ export default function StudentMain() {
   const [error, setError] = useState<string | null>(null);
   const [likedCourses, setLikedCourses] = useState<Set<string>>(new Set());
   const [language, setLanguage] = useState<"uz" | "ru" | "en">("uz");
+  const router = useRouter();
 
-  // Load language from localStorage
   useEffect(() => {
     const savedLang = (localStorage.getItem("language") || "uz") as "uz" | "ru" | "en";
     setLanguage(savedLang);
   }, []);
 
-  // Fetch courses from backend
+  useEffect(() => {
+    const handleLanguageChange = (e: any) => {
+      if (e.detail?.language) {
+        setLanguage(e.detail.language);
+      }
+    };
+
+    window.addEventListener("languageChanged", handleLanguageChange);
+    return () => window.removeEventListener("languageChanged", handleLanguageChange);
+  }, []);
+
   useEffect(() => {
     async function fetchCourses() {
       try {
@@ -48,6 +59,12 @@ export default function StudentMain() {
       }
       return newSet;
     });
+  };
+
+  const handleOpenCourse = (courseId: number) => {
+    // Save current course access
+    localStorage.setItem("lastAccessedCourse", String(courseId));
+    router.push(`/students/${courseId}`);
   };
 
   return (
@@ -109,6 +126,7 @@ export default function StudentMain() {
                   category={item.course.category?.name || "Kurs"}
                   isLiked={likedCourses.has(String(item.course.id))}
                   onLike={() => handleLike(String(item.course.id))}
+                  onOpen={() => handleOpenCourse(item.course.id)}
                 />
               ))}
             </div>

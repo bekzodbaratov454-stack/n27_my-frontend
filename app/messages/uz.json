@@ -150,6 +150,27 @@
         "loadingError": "Kurslarni yuklashda xatolik yuz berdi",
         "logout": "Profildan chiqish",
         "backToSite": "Saytga qaytish",
-        "profileInfo": "Profil ma'lumotlari"
+        "profileInfo": "Profil ma'lumotlari",
+        "continueReading": "Ko'rishni boshlash",
+        "viewedProgress": "Ko'rildi",
+        "lessons": "Darslar",
+        "startLesson": "Nimadan boshlash kerak",
+        "duration": "Davomiyligi",
+        "level": "Daraja",
+        "description": "Tavsif",
+        "materials": "Materiallar",
+        "sectionTitle": "Bo'lim",
+        "lessonTitle": "Dars",
+        "backToCourse": "Kursga qaytish",
+        "markComplete": "Yakunlandi deb belgilash",
+        "profileSettings": "Profil sozlamalari",
+        "editProfile": "Profilni tahrirlash",
+        "fullName": "To'liq ismi",
+        "phone": "Telefon",
+        "email": "Email",
+        "save": "Saqlash",
+        "cancel": "Bekor qilish",
+        "updateSuccess": "Profil muvaffaqiyatli yangilandi",
+        "updateError": "Profil yangilashda xatolik"
     }
 }

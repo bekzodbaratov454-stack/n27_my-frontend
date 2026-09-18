@@ -33,7 +33,7 @@ interface CourseCardProps {
 
 function CourseCard({ course, priceLabel }: CourseCardProps) {
   const [liked, setLiked] = useState(false);
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://63.180.181.4:8080";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
   return (
     <Link

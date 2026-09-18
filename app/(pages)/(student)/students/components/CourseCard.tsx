@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
  
 import avatar from "@/app/assets/bekzodsafarov.jpg"
 interface CourseCardProps {
@@ -12,6 +11,7 @@ interface CourseCardProps {
   category?: string;
   isLiked?: boolean;
   onLike?: () => void;
+  onOpen?: () => void;
 }
 
 export default function CourseCard({
@@ -24,25 +24,38 @@ export default function CourseCard({
   category = "UI/UX Dizayn",
   isLiked = false,
   onLike,
+  onOpen,
 }: CourseCardProps) {
   return (
     <div className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
       {/* Course thumbnail */}
-      <Link href={`/students/${id}`} className="block relative aspect-video overflow-hidden">
-        <Image
-          src={thumbnail}
-          alt={title}
-          fill
-          className="object-cover hover:scale-105 transition-transform duration-300"
-          style={{ objectPosition: 'center 20%' }}
-        />
+      <button onClick={onOpen} className="block w-full relative aspect-video overflow-hidden bg-gradient-to-br from-[#4F7FFF] to-[#3D6EEE]">
+        {thumbnail && thumbnail !== "/bolakay.png" ? (
+          <Image
+            src={thumbnail}
+            alt={title}
+            fill
+            className="object-cover hover:scale-105 transition-transform duration-300"
+            style={{ objectPosition: 'center 20%' }}
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-center text-white">
+              <div className="text-4xl mb-2">📚</div>
+              <p className="text-sm font-semibold">{title}</p>
+            </div>
+          </div>
+        )}
         {/* Category badge */}
         <div className="absolute top-3 left-3">
           <span className="px-3 py-1.5 bg-[#10B981] text-white text-xs font-semibold rounded-full shadow-lg">
             {category}
           </span>
         </div>
-      </Link>
+      </button>
 
       {/* Course info */}
       <div className="p-4">
@@ -77,11 +90,11 @@ export default function CourseCard({
         </div>
 
         {/* Course title */}
-        <Link href={`/students/${id}`}>
-          <h3 className="text-base font-bold text-[#1a1a1a] mb-3 hover:text-[#4F7FFF] transition-colors line-clamp-2">
+        <button onClick={onOpen} className="w-full text-left hover:text-[#4F7FFF] transition-colors">
+          <h3 className="text-base font-bold text-[#1a1a1a] mb-3 line-clamp-2">
             {title}
           </h3>
-        </Link>
+        </button>
 
         {/* Progress */}
         <div className="space-y-2 mb-3">
@@ -98,12 +111,12 @@ export default function CourseCard({
         </div>
 
         {/* Continue button */}
-        <Link
-          href={`/students/${id}`}
+        <button
+          onClick={onOpen}
           className="w-full block text-center bg-[#4F7FFF] hover:bg-[#3D6EEE] text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
         >
           Ko&apos;rishni boshlash
-        </Link>
+        </button>
       </div>
     </div>
   );

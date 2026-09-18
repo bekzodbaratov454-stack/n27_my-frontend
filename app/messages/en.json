@@ -150,6 +150,27 @@
         "loadingError": "Error loading courses",
         "logout": "Sign Out",
         "backToSite": "Back to Site",
-        "profileInfo": "Profile Information"
+        "profileInfo": "Profile Information",
+        "continueReading": "Start Viewing",
+        "viewedProgress": "Viewed",
+        "lessons": "Lessons",
+        "startLesson": "Getting Started",
+        "duration": "Duration",
+        "level": "Level",
+        "description": "Description",
+        "materials": "Materials",
+        "sectionTitle": "Section",
+        "lessonTitle": "Lesson",
+        "backToCourse": "Back to Course",
+        "markComplete": "Mark as Complete",
+        "profileSettings": "Profile Settings",
+        "editProfile": "Edit Profile",
+        "fullName": "Full Name",
+        "phone": "Phone",
+        "email": "Email",
+        "save": "Save",
+        "cancel": "Cancel",
+        "updateSuccess": "Profile updated successfully",
+        "updateError": "Error updating profile"
     }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ImageLogin from "@/app/assets/register_purple.png";
@@ -10,7 +10,7 @@ import { useRegisterStore } from "@/store/useRegisterStore";
 import { showToast } from "@/store/useToastStore";
 import { baseAPI, setToken } from "@/app/lib/utils";
 
-export default function VerificationPage() {
+function VerificationContent() {
   const [code, setCode] = useState("");
   const [timeLeft, setTimeLeft] = useState(46);
   const { formData, resetFormData } = useRegisterStore();
@@ -190,5 +190,13 @@ export default function VerificationPage() {
         <div className="w-full text-center text-xs text-gray-400"></div>
       </div>
     </div>
+  );
+}
+
+export default function VerificationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Yuklanmoqda...</div>}>
+      <VerificationContent />
+    </Suspense>
   );
 }

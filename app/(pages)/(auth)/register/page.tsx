@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Image from "next/image";
 import ImageLogin from "@/app/assets/register_purple.png";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { showToast } from "@/store/useToastStore";
 import { useRegisterStore } from "@/store/useRegisterStore";
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
@@ -197,5 +197,13 @@ export default function RegisterPage() {
         <div className="w-full text-center text-xs text-gray-400"></div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Yuklanmoqda...</div>}>
+      <RegisterContent />
+    </Suspense>
   );
 }

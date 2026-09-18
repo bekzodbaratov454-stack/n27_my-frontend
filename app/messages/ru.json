@@ -150,6 +150,27 @@
         "loadingError": "Ошибка при загрузке курсов",
         "logout": "Выход из профиля",
         "backToSite": "Вернуться на сайт",
-        "profileInfo": "Информация профиля"
+        "profileInfo": "Информация профиля",
+        "continueReading": "Начать просмотр",
+        "viewedProgress": "Просмотрено",
+        "lessons": "Уроки",
+        "startLesson": "С чего начать",
+        "duration": "Длительность",
+        "level": "Уровень",
+        "description": "Описание",
+        "materials": "Материалы",
+        "sectionTitle": "Раздел",
+        "lessonTitle": "Урок",
+        "backToCourse": "Вернуться на курс",
+        "markComplete": "Отметить как завершено",
+        "profileSettings": "Настройки профиля",
+        "editProfile": "Редактировать профиль",
+        "fullName": "Полное имя",
+        "phone": "Телефон",
+        "email": "Электронная почта",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "updateSuccess": "Профиль успешно обновлен",
+        "updateError": "Ошибка при обновлении профиля"
     }
 }

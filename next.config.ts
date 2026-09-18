@@ -1,27 +1,26 @@
 import type { NextConfig } from "next";
 
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const apiUrl = rawApiUrl.replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "**",
       },
       {
-        protocol: 'http',
-        hostname: '63.180.181.4',
-        port: '8080',
-        pathname: '/**',
+        protocol: "http",
+        hostname: "**",
       },
     ],
   },
   async rewrites() {
     return [
       {
-        source: '/api/v1/:path*',
-        destination: `http://63.180.181.4:8080/api/v1/:path*`,
+        source: "/api/v1/:path*",
+        destination: `${apiUrl}/api/v1/:path*`,
       },
     ];
   },

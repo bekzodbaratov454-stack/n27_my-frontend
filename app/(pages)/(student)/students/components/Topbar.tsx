@@ -52,20 +52,36 @@ export default function Topbar() {
     }
   }, []);
 
+  // Listen for language changes
+  useEffect(() => {
+    const handleLanguageChange = (e: any) => {
+      if (e.detail?.language) {
+        setLanguage(e.detail.language);
+      }
+    };
+
+    window.addEventListener("languageChanged", handleLanguageChange);
+    return () => window.removeEventListener("languageChanged", handleLanguageChange);
+  }, []);
+
   // Handle language change
   const handleLanguageChange = (lang: LanguageType) => {
     setLanguage(lang);
     localStorage.setItem("language", lang);
+    // Trigger event for other components
+    window.dispatchEvent(new CustomEvent("languageChanged", { detail: { language: lang } }));
     setIsLangDropdownOpen(false);
   };
 
   // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-    router.push("/");
-  };
+const handleLogout = () => {
+  cookieStore.delete("accessToken")
+  // localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+  localStorage.removeItem("language");
+  window.location.href = "/"; // router.push emas
+};
 
   // Handle click outside
   useEffect(() => {
@@ -90,6 +106,8 @@ export default function Topbar() {
     };
     return langMap[language];
   };
+
+  const t = messages[language];
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
@@ -206,19 +224,33 @@ export default function Topbar() {
 
           {isDropdownOpen && (
             <div className="absolute right-0 mt-3 w-60 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left">
+              <button 
+                onClick={() => router.push("/")}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 </svg>
-                <span className="text-sm text-[#1a1a1a] font-medium">Saytga qaytish</span>
+                <span className="text-sm text-[#1a1a1a] font-medium">
+                  {language === "uz" && "Saytga qaytish"}
+                  {language === "ru" && "Вернуться на сайт"}
+                  {language === "en" && "Back to Site"}
+                </span>
               </button>
               
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left">
+              <button 
+                onClick={() => router.push("/students/profile")}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <span className="text-sm text-[#1a1a1a] font-medium">Profil ma&apos;lumotlari</span>
+                <span className="text-sm text-[#1a1a1a] font-medium">
+                  {language === "uz" && "Profil ma'lumotlari"}
+                  {language === "ru" && "Информация профиля"}
+                  {language === "en" && "Profile Information"}
+                </span>
               </button>
               
               <div className="h-px bg-gray-200 my-1.5 mx-2"></div>
@@ -232,7 +264,11 @@ export default function Topbar() {
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                <span className="text-sm text-[#EF4444] font-medium">Profildan chiqish</span>
+                <span className="text-sm text-[#EF4444] font-medium">
+                  {language === "uz" && "Profildan chiqish"}
+                  {language === "ru" && "Выход из профиля"}
+                  {language === "en" && "Sign Out"}
+                </span>
               </button>
             </div>
           )}

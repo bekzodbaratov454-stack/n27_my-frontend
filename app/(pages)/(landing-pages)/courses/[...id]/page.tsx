@@ -4,7 +4,7 @@ import { CourseSidebar } from "@/app/components/course-details/course-sidebar";
 import { AccordionList } from "@/app/components/course-details/accordion-list";
 import { CommentsSection } from "@/app/components/course-details/comments-section";
 
-const API_URL = process.env.BACKEND_URL || "http://63.180.181.4:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || "";
 
 interface PageProps {
   params: Promise<{ id?: string[] }>;
