@@ -19,6 +19,7 @@ export interface Course {
 
 interface CourseState {
   courses: Course[];
+  setCourses: (courses: Course[]) => void;
   addCourse: (course: Omit<Course, 'id' | 'createdAt'>) => void;
   updateCourse: (id: number, course: Partial<Course>) => void;
   deleteCourse: (id: number) => void;
@@ -28,6 +29,7 @@ interface CourseState {
 }
 
 export const useCourseStore = create<CourseState>((set) => ({
+  setCourses: (courses) => set({ courses }),
   courses: [
     {
       id: 1,

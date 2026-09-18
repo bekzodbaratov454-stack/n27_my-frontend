@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Search,
   Filter,
@@ -21,11 +21,14 @@ import { useCategoryStore } from "@/app/store/useCategoryStore";
 import { useCourseStore, Course } from "@/app/store/useCourseStore";
 import CustomSelect from "@/app/components/dashboard/CustomSelect";
 import Pagination from "@/app/components/dashboard/Pagination";
+import { baseAPI } from "@/app/lib/utils";
+import { showToast } from "@/store/useToastStore";
 
 export default function AllCoursesPage() {
-  const { categories } = useCategoryStore();
+  const { categories, setCategories } = useCategoryStore();
   const { 
     courses, 
+    setCourses,
     addCourse, 
     updateCourse, 
     deleteCourse, 
@@ -49,6 +52,7 @@ export default function AllCoursesPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Current items
   const [currentCourse, setCurrentCourse] = useState<Course | null>(null);
@@ -58,10 +62,77 @@ export default function AllCoursesPage() {
     title: "",
     desc: "",
     price: "",
-    level: "",
+    level: "beginner",
     categoryId: "",
   });
   const [assistant, setAssistant] = useState("");
+
+  // File Upload State
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setVideoFile(file);
+    }
+  };
+
+  // Fetch Categories & Courses on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catsRes, coursesRes] = await Promise.allSettled([
+          baseAPI.get("/categories"),
+          baseAPI.get("/courses"),
+        ]);
+
+        if (catsRes.status === "fulfilled") {
+          const list = catsRes.value.data?.data || catsRes.value.data || [];
+          if (Array.isArray(list)) {
+            setCategories(list);
+          }
+        }
+
+        if (coursesRes.status === "fulfilled") {
+          const courseList = coursesRes.value.data?.data || coursesRes.value.data || [];
+          if (Array.isArray(courseList) && courseList.length > 0) {
+            const mappedCourses = courseList.map((c: any) => ({
+              id: c.id,
+              title: c.name || c.title,
+              desc: c.description || c.desc || "",
+              price: Number(c.price) || 0,
+              level: (c.level || "beginner").toLowerCase(),
+              categoryId: c.categoryId,
+              status: "active" as const,
+              cover: c.banner || "bg-gradient-to-br from-blue-400 to-indigo-500",
+              studentsCount: c._count?.students || 0,
+              rating: 5.0,
+              duration: "20 soat",
+              mentor: "Ustoz",
+              createdAt: c.created_at || new Date().toISOString(),
+            }));
+            setCourses(mappedCourses);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load initial data:", err);
+      }
+    };
+
+    fetchData();
+  }, [setCategories, setCourses]);
 
   // Filtering
   const filteredCourses = useMemo(() => {
@@ -108,7 +179,10 @@ export default function AllCoursesPage() {
 
   const openAddModal = () => {
     setModalMode("add");
-    setFormData({ title: "", desc: "", price: "", level: "", categoryId: "" });
+    setFormData({ title: "", desc: "", price: "", level: "beginner", categoryId: "" });
+    setBannerFile(null);
+    setBannerPreview(null);
+    setVideoFile(null);
     setCurrentCourse(null);
     setIsModalOpen(true);
   };
@@ -122,39 +196,77 @@ export default function AllCoursesPage() {
       level: course.level, 
       categoryId: course.categoryId.toString() 
     });
+    setBannerFile(null);
+    setBannerPreview(course.cover?.startsWith("http") || course.cover?.startsWith("/") ? course.cover : null);
+    setVideoFile(null);
     setCurrentCourse(course);
     setIsModalOpen(true);
   };
 
-  const handleSaveCourse = () => {
-    if (!formData.title || !formData.level || !formData.categoryId || !formData.price) return;
-    
-    if (modalMode === "add") {
-      addCourse({
-        title: formData.title,
-        desc: formData.desc,
-        price: Number(formData.price),
-        level: formData.level,
-        categoryId: Number(formData.categoryId),
-        status: "active",
-        cover: "bg-gradient-to-br from-blue-400 to-indigo-500",
-        studentsCount: 0,
-        rating: 0
+  const handleSaveCourse = async () => {
+    if (!formData.title || !formData.level || !formData.categoryId || !formData.price) {
+      showToast("Xatolik !", {
+        title: "Iltimos barcha maydonlarni to'ldiring",
+        type: "error",
       });
-      setSuccessMessage("Muvaffaqiyatli qo’shildi");
-    } else if (modalMode === "edit" && currentCourse) {
-      updateCourse(currentCourse.id, {
-        title: formData.title,
-        desc: formData.desc,
-        price: Number(formData.price),
-        level: formData.level,
-        categoryId: Number(formData.categoryId)
-      });
-      setSuccessMessage("Muvaffaqiyatli o’zgartirildi");
+      return;
     }
-    
-    setIsModalOpen(false);
-    setIsSuccessModalOpen(true);
+
+    setIsSubmitting(true);
+    try {
+      if (modalMode === "add") {
+        const postData = new FormData();
+        postData.append("name", formData.title);
+        postData.append("description", formData.desc || formData.title);
+        postData.append("price", formData.price.toString());
+        postData.append("level", formData.level.toUpperCase());
+        postData.append("categoryId", formData.categoryId.toString());
+        if (bannerFile) {
+          postData.append("banner", bannerFile);
+        }
+        if (videoFile) {
+          postData.append("introVideo", videoFile);
+        }
+
+        const res = await baseAPI.post("/courses", postData);
+        const createdCourse = res.data?.data || res.data;
+
+        addCourse({
+          title: formData.title,
+          desc: formData.desc,
+          price: Number(formData.price),
+          level: formData.level,
+          categoryId: Number(formData.categoryId),
+          status: "active",
+          cover: createdCourse?.banner || "bg-gradient-to-br from-blue-400 to-indigo-500",
+          studentsCount: 0,
+          rating: 5.0,
+        });
+
+        setSuccessMessage("Muvaffaqiyatli qo’shildi");
+        setIsModalOpen(false);
+        setIsSuccessModalOpen(true);
+      } else if (modalMode === "edit" && currentCourse) {
+        updateCourse(currentCourse.id, {
+          title: formData.title,
+          desc: formData.desc,
+          price: Number(formData.price),
+          level: formData.level,
+          categoryId: Number(formData.categoryId)
+        });
+        setSuccessMessage("Muvaffaqiyatli o’zgartirildi");
+        setIsModalOpen(false);
+        setIsSuccessModalOpen(true);
+      }
+    } catch (err: any) {
+      console.error("Course save error:", err);
+      showToast("Xatolik !", {
+        title: err.response?.data?.message || "Kursni saqlashda xatolik yuz berdi",
+        type: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = () => {
@@ -479,39 +591,66 @@ export default function AllCoursesPage() {
               <div className="grid grid-cols-2 gap-5">
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-2">Banner</label>
-                  <div className={`border border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center ${modalMode === "edit" ? "p-2" : "py-6 px-4"} bg-gray-50/50 hover:bg-blue-50/50 hover:border-blue-300 transition-colors cursor-pointer group text-center`}>
-                    {modalMode === "edit" ? (
-                      <div className="w-full h-24 mb-3 rounded-xl bg-linear-to-br from-blue-400 to-indigo-500 shadow-sm relative overflow-hidden flex items-center justify-center">
-                        <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                          <UploadCloud size={16} />
+                  <input 
+                    type="file" 
+                    ref={bannerInputRef} 
+                    accept="image/*" 
+                    onChange={handleBannerChange} 
+                    className="hidden" 
+                  />
+                  <div 
+                    onClick={() => bannerInputRef.current?.click()}
+                    className={`border border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center ${bannerPreview ? "p-1.5" : "py-6 px-4"} bg-gray-50/50 hover:bg-blue-50/50 hover:border-blue-300 transition-colors cursor-pointer group text-center relative overflow-hidden`}
+                  >
+                    {bannerPreview ? (
+                      <div className="w-full h-24 relative rounded-xl overflow-hidden group">
+                        <img src={bannerPreview} alt="Banner Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-medium">
+                          O'zgartirish
                         </div>
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500 mb-3 group-hover:scale-110 transition-transform">
-                        <UploadCloud size={20} />
-                      </div>
+                      <>
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500 mb-3 group-hover:scale-110 transition-transform">
+                          <UploadCloud size={20} />
+                        </div>
+                        <p className="text-[12px] text-gray-500 mb-0.5"><span className="text-blue-600 font-medium">Bu yerga bosing</span> yoki faylni tanlang</p>
+                        <p className="text-[10px] text-gray-400">SVG, PNG, JPG (max. 800x400)</p>
+                      </>
                     )}
-                    <p className="text-[12px] text-gray-500 mb-0.5"><span className="text-blue-600 font-medium">Bu yerga torting</span> yoki faylni tanlang</p>
-                    <p className="text-[10px] text-gray-400">SVG, PNG, JPG (max. 800x400)</p>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 mb-2">Kirish video</label>
-                  <div className={`border border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center ${modalMode === "edit" ? "p-2" : "py-6 px-4"} bg-gray-50/50 hover:bg-blue-50/50 hover:border-blue-300 transition-colors cursor-pointer group text-center`}>
-                    {modalMode === "edit" ? (
-                      <div className="w-full h-24 mb-3 rounded-xl bg-linear-to-br from-orange-400 to-red-500 shadow-sm relative overflow-hidden flex items-center justify-center">
-                         <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                          <UploadCloud size={16} />
+                  <input 
+                    type="file" 
+                    ref={videoInputRef} 
+                    accept="video/*" 
+                    onChange={handleVideoChange} 
+                    className="hidden" 
+                  />
+                  <div 
+                    onClick={() => videoInputRef.current?.click()}
+                    className={`border border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center ${videoFile ? "p-2" : "py-6 px-4"} bg-gray-50/50 hover:bg-blue-50/50 hover:border-blue-300 transition-colors cursor-pointer group text-center relative overflow-hidden`}
+                  >
+                    {videoFile ? (
+                      <div className="flex flex-col items-center p-2 text-center">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-1 text-sm font-bold">
+                          ✓
                         </div>
+                        <p className="text-xs font-semibold text-gray-800 line-clamp-1 max-w-[130px]">{videoFile.name}</p>
+                        <p className="text-[10px] text-gray-400">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB</p>
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500 mb-3 group-hover:scale-110 transition-transform">
-                        <UploadCloud size={20} />
-                      </div>
+                      <>
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500 mb-3 group-hover:scale-110 transition-transform">
+                          <UploadCloud size={20} />
+                        </div>
+                        <p className="text-[12px] text-gray-500 mb-0.5"><span className="text-blue-600 font-medium">Bu yerga bosing</span> yoki faylni tanlang</p>
+                        <p className="text-[10px] text-gray-400">MP4, WebM (max. 50MB)</p>
+                      </>
                     )}
-                    <p className="text-[12px] text-gray-500 mb-0.5"><span className="text-blue-600 font-medium">Bu yerga torting</span> yoki faylni tanlang</p>
-                    <p className="text-[10px] text-gray-400">MP4, WebM (max. 50MB)</p>
                   </div>
                 </div>
               </div>
@@ -568,7 +707,14 @@ export default function AllCoursesPage() {
 
               {/* Category */}
               <div>
-                <label className="block text-[13px] font-semibold text-gray-700 mb-2">Kategoriya</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-[13px] font-semibold text-gray-700">Kategoriya</label>
+                  {categories.length === 0 && (
+                    <Link href="/dashboard/courses/categories" className="text-xs text-blue-600 hover:underline">
+                      + Kategoriya yaratish
+                    </Link>
+                  )}
+                </div>
                 <CustomSelect
                   options={categories.map((cat) => ({ value: cat.id.toString(), label: cat.name }))}
                   value={formData.categoryId}
@@ -582,11 +728,11 @@ export default function AllCoursesPage() {
             <div className="px-6 py-5 border-t border-gray-100 flex items-center bg-gray-50/50 rounded-b-3xl">
               <button 
                 onClick={handleSaveCourse}
-                disabled={!formData.title || !formData.level || !formData.categoryId || !formData.price}
+                disabled={isSubmitting || !formData.title || !formData.level || !formData.categoryId || !formData.price}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-sm text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Check size={18} />
-                Saqlash
+                {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
               </button>
             </div>
           </div>

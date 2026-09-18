@@ -93,23 +93,32 @@ export default function CustomSelect({ options, value, onChange, placeholder = "
           className="bg-white/90 backdrop-blur-2xl border border-gray-200 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         >
           <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2.5 text-sm rounded-lg transition-all duration-200 ${
-                  value === option.value 
-                    ? "bg-blue-50 text-blue-600 font-semibold" 
-                    : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 font-medium"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+            {options.length === 0 ? (
+              <div className="py-4 px-3 text-center text-xs text-gray-500">
+                Hech narsa topilmadi.<br />
+                <a href="/dashboard/courses/categories" className="text-blue-600 font-semibold underline mt-1.5 inline-block">
+                  + Kategoriya yaratish
+                </a>
+              </div>
+            ) : (
+              options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2.5 text-sm rounded-lg transition-all duration-200 ${
+                    value === option.value 
+                      ? "bg-blue-50 text-blue-600 font-semibold" 
+                      : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 font-medium"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))
+            )}
           </div>
         </div>,
         document.body
